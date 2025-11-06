@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>SchedulEase - Appointment Tracking</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header class="topbar">
+        <h1 class="logo">Schedule<span>Ease</span></h1>
+        <div class="actions">
+            <input id="search" class="search" type="search" placeholder="Search title, client, location, notes">
+            <input id="dateFilter" class="date" type="date">
+            <select id="statusFilter" class="select">
+                <option value="any">All Status</option>
+                <option value="Upcoming">Upcoming</option>
+                <option value="Completed">Completed</option>
+                <option value="Cancelled">Cancelled</option>
+            </select>
+            <select id="sortBy" class="select">
+                <option value="datetimeasc">DateTime</option>
+                <option value="datetimedesc">DateTime</option>
+                <option value="clientasc">Client A-Z</option>
+                <option value="createddesc">Recently Added</option>
+            </select>
+            <label class="file-btn">
+                <input id="importCsv" type="file" accept=".csv,text/csv">
+                Import CSV
+            </label>
+            <button id="exportCsv" class="btn ghost">Export CSV</button>
+            <label class="file-btn">
+                <input id="importJson" type="file" accept="application/json">
+                Import JSON
+            </label>
+            <button id="exportJson" class="btn ghost">Export JSON</button>
+            <button id="themeToggle" class="btn ghost" aria-label="Toggle theme">Toggle</button>
+            <button id="newBtn" class="btn">New</button>
+        </div>
+    </header>
+
+    <main class="container">
+        <section class="stats">
+            <div class="stat">
+                <div id="totalAppts" class="stat-val">0</div>
+                <div class="stat-label">Appointments</div>
+            </div>
+            <div class="stat">
+                <div id="upcomingCount" class="stat-val">0</div>
+                <div class="stat-label">Upcoming</div>
+            </div>
+            <div class="stat">
+                <div id="completedCount" class="stat-val">0</div>
+                <div class="stat-label">Completed</div>
+            </div>
+            <div class="stat">
+                <div id="cancelledCount" class="stat-val">0</div>
+                <div class="stat-label">Cancelled</div>
+            </div>
+        </section>
+
+        <section class="grid-2">
+            <div class="card">
+                <div class="card-head">
+                    <h3>Weekly Volume</h3>
+                    <div class="muted" id="chartRangeLabel"></div>
+                </div>
+                <canvas id="weekChart"></canvas>
+            </div>
+            <div class="card">
+                <div class="calendar-head">
+                    <button id="prevWeek" class="btn ghost">Prev</button>
+                    <h3 id="weekLabel">This Week</h3>
+                    <button id="nextWeek" class="btn ghost">Next</button>
+                    <button id="todayBtn" class="btn">Today</button>
+                </div>
+                <div id="weekGrid" class="week-grid"></div>
+            </div>
+        </section>
+
+        <section class="card">
+            <div class="table-header">
+                <h2>Appointments</h2>
+                <span id="resultCount" class="muted">0 results</span>
+            </div>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>When</th>
+                            <th>Title / Client</th>
+                            <th>Location</th>
+                            <th>Status</th>
+                            <th>Duration</th>
+                            <th class="actions-col">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody"></tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <dialog id="formDialog">
+        <form method="dialog" class="dialog-card" id="apptForm">
+            <h3 id="formTitle">New Appointment</h3>
+            <input type="hidden" id="aid">
+            <div class="grid">
+                <label><span>Title</span><input id="title" required></label>
+                <label><span>Client</span><input id="client" required></label>
+                <label><span>Date</span><input id="date" type="date" required></label>
+                <label><span>Time</span><input id="time" type="time" required></label>
+                <label><span>Duration (mins)</span><input id="duration" type="number" min="0" step="5" value="30"></label>
+                <label><span>Status</span><select id="status"><option>Upcoming</option><option>Completed</option><option>Cancelled</option></select></label>
+                <label><span>Location</span><input id="location"></label>
+                <label class="span-2"><span>Notes</span><textarea id="notes" rows="3"></textarea></label>
+            </div>
+            <div class="dialog-actions">
+                <button value="cancel" class="btn ghost">Cancel</button>
+                <button value="submit" class="btn">Save</button>
+            </div>
+        </form>
+    </dialog>
+
+    <dialog id="confirmDialog">
+        <form method="dialog" class="dialog-card">
+            <p id="confirmMsg">Are you sure?</p>
+            <div class="dialog-actions">
+                <button value="cancel" class="btn ghost">Cancel</button>
+                <button value="confirm" class="btn danger">Delete</button>
+            </div>
+        </form>
+    </dialog>
+
+    <dialog id="qrDialog">
+        <div class="dialog-card">
+            <h3 id="qrTitle">Appointment QR</h3>
+            <div class="grid-qr">
+                <div><div id="qrBox"></div></div>
+                <div><h4>Email Reminder</h4><textarea id="emailTemplate" rows="10"></textarea></div>
+            </div>
+            <div class="dialog-actions" style="justify-content: flex-start;">
+                <button id="copyEmail" class="btn ghost">Copy Email</button>
+                <a id="mailtoBtn" class="btn" href="" target="_blank">Open Mail</a>
+            </div>
+            <div class="dialog-actions">
+                <button id="printSummary" class="btn">Export PDF</button>
+                <button id="qrClose" class="btn ghost">Close</button>
+            </div>
+        </div>
+    </dialog>
+
+    <footer class="footer">
+        <p>&copy; 2025 SchedulEase. Vanilla HTML/CSS/JS</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
